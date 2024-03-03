@@ -1,36 +1,67 @@
-import { Offcanvas, Stack } from "react-bootstrap"
+import { Button, Card } from "react-bootstrap"
 import { useShoppingCart } from "../context/ShoppingCartContext"
 import { formatCurrency } from "../utilities/formatCurrency"
-import { CartItem } from "./CartItem"
-import storeItems from "../data/items.json"
 
-type ShoppingCartProps = {
-  isOpen: boolean
+type StoreItemProps = {
+  id: number
+  name: string
+  price: number
+  imgUrl: string
 }
 
-export function ShoppingCart({ isOpen }: ShoppingCartProps) {
-  const { closeCart, cartItems } = useShoppingCart()
+export function StoreItem({ id, name, price, imgUrl }: StoreItemProps) {
+  const {
+    getItemQuantity,
+    increaseCartQuantity,
+    decreaseCartQuantity,
+    removeFromCart,
+  } = useShoppingCart()
+  const quantity = getItemQuantity(id)
+
   return (
-    <Offcanvas show={isOpen} onHide={closeCart} placement="end">
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title>Cart</Offcanvas.Title>
-      </Offcanvas.Header>
-      <Offcanvas.Body>
-        <Stack gap={3}>
-          {cartItems.map(item => (
-            <CartItem key={item.id} {...item} />
-          ))}
-          <div className="ms-auto fw-bold fs-5">
-            Total{" "}
-            {formatCurrency(
-              cartItems.reduce((total, cartItem) => {
-                const item = storeItems.find(i => i.id === cartItem.id)
-                return total + (item?.price || 0) * cartItem.quantity
-              }, 0)
-            )}
-          </div>
-        </Stack>
-      </Offcanvas.Body>
-    </Offcanvas>
+    <Card className="h-100">
+      <Card.Img
+        variant="top"
+        src={imgUrl}
+        height="200px"
+        style={{ objectFit: "cover" }}
+      />
+      <Card.Body className="d-flex flex-column">
+        <Card.Title className="d-flex justify-content-between align-items-baseline mb-4">
+          <span className="fs-2">{name}</span>
+          <span className="ms-2 text-muted">{formatCurrency(price)}</span>
+        </Card.Title>
+        <div className="mt-auto">
+          {quantity === 0 ? (
+            <Button className="w-100" onClick={() => increaseCartQuantity(id)}>
+              + Add To Cart
+            </Button>
+          ) : (
+            <div
+              className="d-flex align-items-center flex-column"
+              style={{ gap: ".5rem" }}
+            >
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ gap: ".5rem" }}
+              >
+                <Button onClick={() => decreaseCartQuantity(id)}>-</Button>
+                <div>
+                  <span className="fs-3">{quantity}</span> in cart
+                </div>
+                <Button onClick={() => increaseCartQuantity(id)}>+</Button>
+              </div>
+              <Button
+                onClick={() => removeFromCart(id)}
+                variant="danger"
+                size="sm"
+              >
+                Remove
+              </Button>
+            </div>
+          )}
+        </div>
+      </Card.Body>
+    </Card>
   )
 }
